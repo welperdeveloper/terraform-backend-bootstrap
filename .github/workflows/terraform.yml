@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Configure AWS (Plan)
+      - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ env.ROLE_ARN_TERRAFORM }}
@@ -30,15 +30,15 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: infra/envs/${{ env.ENVIRONMENT }}
+        working-directory: bootstrap/infra/envs/${{ env.ENVIRONMENT }}
 
       - name: Terraform Validate
         run: terraform validate
-        working-directory: infra/envs/${{ env.ENVIRONMENT }}
+        working-directory: bootstrap/infra/envs/${{ env.ENVIRONMENT }}
 
       - name: Terraform Plan
         run: terraform plan
-        working-directory: infra/envs/${{ env.ENVIRONMENT }}
+        working-directory: bootstrap/infra/envs/${{ env.ENVIRONMENT }}
 
   apply:
     name: Terraform Apply (Manual Approval)
@@ -58,8 +58,8 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: infra/envs/${{ env.ENVIRONMENT }}
+        working-directory: bootstrap/infra/envs/${{ env.ENVIRONMENT }}
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
-        working-directory: infra/envs/${{ env.ENVIRONMENT }}
+        working-directory: bootstrap/infra/envs/${{ env.ENVIRONMENT }}
