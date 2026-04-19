@@ -8,13 +8,11 @@ env:
   ENVIRONMENT: dev
   AWS_REGION: us-east-1
   ROLE_ARN_TERRAFORM: arn:aws:iam::579254390465:role/github-actions-terraform-role
-  TF_WORKING_DIR: infra/envs/${{ env.ENVIRONMENT }}
 
 permissions:
   id-token: write
   contents: read
 
-# 🔥 Reusable steps
 jobs:
   plan:
     name: Terraform Plan
@@ -32,22 +30,21 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: ${{ env.TF_WORKING_DIR }}
+        working-directory: infra/envs/${{ env.ENVIRONMENT }}
 
       - name: Terraform Validate
         run: terraform validate
-        working-directory: ${{ env.TF_WORKING_DIR }}
+        working-directory: infra/envs/${{ env.ENVIRONMENT }}
 
       - name: Terraform Plan
         run: terraform plan
-        working-directory: ${{ env.TF_WORKING_DIR }}
+        working-directory: infra/envs/${{ env.ENVIRONMENT }}
 
   apply:
     name: Terraform Apply (Manual Approval)
     needs: plan
     runs-on: ubuntu-latest
     environment: production
-
     steps:
       - uses: actions/checkout@v3
 
@@ -61,8 +58,8 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: ${{ env.TF_WORKING_DIR }}
+        working-directory: infra/envs/${{ env.ENVIRONMENT }}
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
-        working-directory: ${{ env.TF_WORKING_DIR }}
+        working-directory: infra/envs/${{ env.ENVIRONMENT }}
