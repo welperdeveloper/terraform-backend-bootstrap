@@ -4,66 +4,65 @@ on:
   push:
     branches: ["main"]
 
+env:
+  ENVIRONMENT: dev
+  AWS_REGION: us-east-1
+  ROLE_ARN_TERRAFORM: arn:aws:iam::579254390465:role/github-actions-terraform-role
+  TF_WORKING_DIR: infra/envs/${{ env.ENVIRONMENT }}
+
 permissions:
   id-token: write
   contents: read
 
+# 🔥 Reusable steps
 jobs:
   plan:
     name: Terraform Plan
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Configure AWS Credentials (OIDC)
+      - name: Configure AWS (Plan)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::579254390465:role/github-actions-terraform-role
-          aws-region: us-east-1
+          role-to-assume: ${{ env.ROLE_ARN_TERRAFORM }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
         run: terraform init
-        working-directory: infra/envs/dev
+        working-directory: ${{ env.TF_WORKING_DIR }}
 
       - name: Terraform Validate
         run: terraform validate
-        working-directory: infra/envs/dev
+        working-directory: ${{ env.TF_WORKING_DIR }}
 
       - name: Terraform Plan
         run: terraform plan
-        working-directory: infra/envs/dev
+        working-directory: ${{ env.TF_WORKING_DIR }}
 
   apply:
     name: Terraform Apply (Manual Approval)
     needs: plan
     runs-on: ubuntu-latest
-
-    # 🔥 ESSA LINHA ativa o approval manual
-    environment:
-      name: production
+    environment: production
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Configure AWS Credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v2
+      - name: Configure AWS (Apply)
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::123456789012:role/github-actions-terraform-role
-          aws-region: us-east-1
+          role-to-assume: ${{ env.ROLE_ARN_TERRAFORM }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
         run: terraform init
-        working-directory: infra/envs/dev
+        working-directory: ${{ env.TF_WORKING_DIR }}
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
-        working-directory: infra/envs/dev
+        working-directory: ${{ env.TF_WORKING_DIR }}
