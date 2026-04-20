@@ -1,13 +1,9 @@
-provider "aws" {
-  region = var.region
-}
-
-resource "aws_s3_bucket" "terraform_state" {
+resource "aws_s3_bucket" "tf_state" {
   bucket = "s3-tfstate-global"
 }
 
 resource "aws_s3_bucket_versioning" "versioning" {
-  bucket = aws_s3_bucket.terraform_state.id
+  bucket = aws_s3_bucket.tf_state.id
 
   versioning_configuration {
     status = "Enabled"
@@ -15,7 +11,7 @@ resource "aws_s3_bucket_versioning" "versioning" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "encryption" {
-  bucket = aws_s3_bucket.terraform_state.id
+  bucket = aws_s3_bucket.tf_state.id
 
   rule {
     apply_server_side_encryption_by_default {
@@ -24,8 +20,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "encryption" {
   }
 }
 
-resource "aws_dynamodb_table" "terraform_lock" {
-  name         = "ddb-tflock-global"
+resource "aws_dynamodb_table" "tf_lock" {
+  name         = var.dynamodb_table_name
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "LockID"
 
