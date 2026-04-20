@@ -19,7 +19,6 @@ jobs:
   bootstrap:
     name: Create Terraform Backend (S3 + DynamoDB)
     runs-on: ubuntu-latest
-    run: ls -R
 
     environment:
       name: bootstrap
@@ -27,6 +26,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Debug files
+        run: ls -R
 
       # OIDC AWS AUTH
       - name: Configure AWS Credentials
