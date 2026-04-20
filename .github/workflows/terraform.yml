@@ -1,65 +1,55 @@
-name: Terraform CI/CD with Manual Approval
+name: Terraform Backend Bootstrap
 
 on:
-  push:
-    branches: ["main"]
-
-env:
-  ENVIRONMENT: dev
-  AWS_REGION: us-east-1
-  ROLE_ARN_TERRAFORM: arn:aws:iam::579254390465:role/github-actions-terraform-role
+  workflow_dispatch:
 
 permissions:
   id-token: write
   contents: read
 
-jobs:
-  plan:
-    name: Terraform Plan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+env:
+  AWS_REGION: us-east-1
+  ROLE_ARN: arn:aws:iam::579254390465:role/github-actions-terraform-role
 
-      - name: Configure AWS
+concurrency:
+  group: terraform-bootstrap
+  cancel-in-progress: false
+
+jobs:
+  bootstrap:
+    name: Create Terraform Backend (S3 + DynamoDB)
+    runs-on: ubuntu-latest
+
+    environment:
+      name: bootstrap
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # OIDC AWS AUTH
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ env.ROLE_ARN_TERRAFORM }}
+          role-to-assume: ${{ env.ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - uses: hashicorp/setup-terraform@v3
+      # Terraform Setup
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
+      # Init
       - name: Terraform Init
         run: terraform init
-        working-directory: bootstrap/infra/envs/${{ env.ENVIRONMENT }}
 
+      # Validate
       - name: Terraform Validate
         run: terraform validate
-        working-directory: bootstrap/infra/envs/${{ env.ENVIRONMENT }}
 
+      # Plan
       - name: Terraform Plan
         run: terraform plan
-        working-directory: bootstrap/infra/envs/${{ env.ENVIRONMENT }}
 
-  apply:
-    name: Terraform Apply (Manual Approval)
-    needs: plan
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Configure AWS
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ env.ROLE_ARN_TERRAFORM }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - uses: hashicorp/setup-terraform@v3
-
-      - name: Terraform Init
-        run: terraform init
-        working-directory: bootstrap/infra/envs/${{ env.ENVIRONMENT }}
-
+      # Apply (criação real)
       - name: Terraform Apply
         run: terraform apply -auto-approve
-        working-directory: bootstrap/infra/envs/${{ env.ENVIRONMENT }}
