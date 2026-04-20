@@ -19,8 +19,6 @@ jobs:
   bootstrap:
     name: Create Terraform Backend (S3 + DynamoDB)
     runs-on: ubuntu-latest
-
-    name: Debug files
     run: ls -R
 
     environment:
